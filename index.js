@@ -6,7 +6,10 @@ import cheerio from "cheerio";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5500;
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server corriendo en puerto ${PORT}`);
+});
 
 // Middleware para parsear JSON
 app.use(express.json());
