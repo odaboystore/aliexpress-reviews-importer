@@ -245,13 +245,12 @@ app.get("/scrape/product", async (req, res) => {
 });
 
 // Endpoint para procesar HTML directamente (para testing)
-app.post("/scrape/html", async (req, res) => {
-  const { html } = req.body;
-  
-  if (!html) {
-    return res.status(400).json({ error: "Falta 'html' en el body" });
+app.get("/scrape/url", async (req, res) => {
+  const { url } = req.query;
+  if (!url) {
+    return res.status(400).json({ error: "Falta el parámetro 'url'" });
   }
-
+  
   try {
     const data = extractProductData(html);
     
