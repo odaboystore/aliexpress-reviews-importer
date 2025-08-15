@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import axios from "axios";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 
 dotenv.config();
 const app = express();
