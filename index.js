@@ -14,10 +14,8 @@ app.get("/ae/product-meta", async (req, res) => {
   if (!productId) return res.status(400).json({ error: "Falta productId" });
 
   try {
-    // URL del producto
     const url = `https://www.aliexpress.us/item/${productId}.html`;
 
-    // Obtener HTML
     const { data: html } = await axios.get(url, {
       headers: {
         "User-Agent":
@@ -27,8 +25,7 @@ app.get("/ae/product-meta", async (req, res) => {
 
     const $ = cheerio.load(html);
 
-    // Seleccionar rating, reviews y ventas desde el DOM
-    // Estos selectores pueden cambiar según AliExpress
+    // Ajusta los selectores según la página real
     const ratingText = $('[data-review-star-rating]').attr("data-review-star-rating") || "0";
     const reviewsText = $('[data-review-count]').attr("data-review-count") || "0";
     const soldText = $('[data-sold-count]').attr("data-sold-count") || "0";
