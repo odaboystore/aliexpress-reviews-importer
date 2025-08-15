@@ -1,65 +1,46 @@
 import express from "express";
-import dotenv from "dotenv";
 import axios from "axios";
-import crypto from "crypto";
-import qs from "qs";
-
-dotenv.config();
+import cheerio from "cheerio";
 
 const app = express();
 app.use(express.json());
 
-const { AE_APP_KEY, AE_APP_SECRET } = process.env;
-
 app.get("/", (req, res) => {
-  res.send("Servidor de AliExpress Reviews Importer funcionando");
+  res.send("Servidor de AliExpress Reviews Scraper funcionando");
 });
 
-// Función para generar sign de AliExpress
-function generateSign(params) {
-  const sortedKeys = Object.keys(params).sort();
-  let str = AE_APP_SECRET;
-  for (let key of sortedKeys) {
-    str += key + params[key];
-  }
-  str += AE_APP_SECRET;
-  return crypto.createHash("sha256").update(str).digest("hex").toUpperCase();
-}
-
-// Endpoint para traer meta de producto
 app.get("/ae/product-meta", async (req, res) => {
-  const { productId, skuId } = req.query;
+  const { productId } = req.query;
   if (!productId) return res.status(400).json({ error: "Falta productId" });
 
   try {
-    const params = {
-      method: "aliexpress.aeop.product.redefining.get",
-      app_key: AE_APP_KEY,
-      timestamp: new Date().toISOString(),
-      format: "json",
-      v: "2.0",
-      productId,
-      skuId: skuId || ""
-    };
+    // URL del producto
+    const url = `https://www.aliexpress.us/item/${productId}.html`;
 
-    params.sign = generateSign(params);
+    // Obtener HTML
+    const { data: html } = await axios.get(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+      }
+    });
 
-    const response = await axios.get(
-      "https://openapi.aliexpress.com/gateway.do?" + qs.stringify(params)
-    );
+    const $ = cheerio.load(html);
 
-    // Revisa la estructura real que devuelve AliExpress
-    const product = response.data.result || {};
+    // Seleccionar rating, reviews y ventas desde el DOM
+    // Estos selectores pueden cambiar según AliExpress
+    const ratingText = $('[data-review-star-rating]').attr("data-review-star-rating") || "0";
+    const reviewsText = $('[data-review-count]').attr("data-review-count") || "0";
+    const soldText = $('[data-sold-count]').attr("data-sold-count") || "0";
 
-    // Ajusta según la respuesta real de la API
-    const rating = Number(product.averageStarRating) || 0;
-    const reviews = Number(product.feedbackCount) || 0;
-    const sold = Number(product.tradeCount) || 0;
+    const rating = parseFloat(ratingText);
+    const reviews = parseInt(reviewsText);
+    const sold = parseInt(soldText);
 
     res.json({ product_id: productId, rating, reviews, sold });
   } catch (err) {
-    console.error(err.message, err.response?.data);
-    res.status(500).json({ error: "Error al consultar AliExpress", details: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Error al scrapear AliExpress", details: err.message });
   }
 });
 
