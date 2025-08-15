@@ -25,14 +25,14 @@ app.get("/ae/product-meta", async (req, res) => {
 
     const $ = cheerio.load(html);
 
-    // Ajusta los selectores según la página real
-    const ratingText = $('[data-review-star-rating]').attr("data-review-star-rating") || "0";
-    const reviewsText = $('[data-review-count]').attr("data-review-count") || "0";
-    const soldText = $('[data-sold-count]').attr("data-sold-count") || "0";
+    // Extraemos rating, reviews y sold
+    const ratingText = $(".reviewer--rating--xrWWFzx strong").text().trim() || "0";
+    const reviewsText = $(".reviewer--reviews--cx7Zs_V").text().trim() || "0";
+    const soldText = $(".reviewer--sold--ytPeoEy").text().trim() || "0";
 
     const rating = parseFloat(ratingText);
-    const reviews = parseInt(reviewsText);
-    const sold = parseInt(soldText);
+    const reviews = parseInt(reviewsText.replace(/\D/g, ""));
+    const sold = parseInt(soldText.replace(/\D/g, ""));
 
     res.json({ product_id: productId, rating, reviews, sold });
   } catch (err) {
