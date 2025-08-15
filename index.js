@@ -30,17 +30,15 @@ app.get("/ae/product-meta", async (req, res) => {
 
     // Extraemos datos
     const data = await page.evaluate(() => {
-      const ratingEl = document.querySelector("a.reviewer--rating--xrWWFzx strong");
-      const reviewsEl = document.querySelector("a.reviewer--reviews--cx7Zs_V");
-      const soldEl = document.querySelector("span.reviewer--sold--ytPeoEy");
-
+      const ratingEl = document.querySelector('a[class*="reviewer--rating"] strong');
+      const reviewsEl = document.querySelector('a[class*="reviewer--reviews"]');
+      const soldEl = document.querySelector('span[class*="reviewer--sold"]');
+    
       const rating = ratingEl ? parseFloat(ratingEl.textContent.trim()) : 0;
-      const reviews = reviewsEl
-        ? parseInt(reviewsEl.textContent.replace(/\D/g, ""))
-        : 0;
+      const reviews = reviewsEl ? parseInt(reviewsEl.textContent.replace(/\D/g, "")) : 0;
       const soldText = soldEl ? soldEl.textContent.replace(/[,+]/g, "") : "0";
-      const sold = parseInt(soldText.match(/\d+/)[0]) || 0;
-
+      const sold = parseInt(soldText.match(/\d+/)?.[0] || "0");
+    
       return { rating, reviews, sold };
     });
 
