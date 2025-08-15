@@ -2,13 +2,14 @@ import express from "express";
 import dotenv from "dotenv";
 import axios from "axios";
 import crypto from "crypto";
+import qs from "qs";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-const { AE_APP_KEY, AE_APP_SECRET, BASE_URL } = process.env;
+const { AE_APP_KEY, AE_APP_SECRET } = process.env;
 
 app.get("/", (req, res) => {
   res.send("Servidor de AliExpress Reviews Importer funcionando");
@@ -32,22 +33,25 @@ app.get("/ae/product-meta", async (req, res) => {
 
   try {
     const params = {
-      method: "aliexpress.product.get",
+      method: "aliexpress.aeop.product.query",
       app_key: AE_APP_KEY,
       timestamp: new Date().toISOString(),
       format: "json",
       v: "2.0",
-      product_id: productId
+      productId: productId
     };
 
     params.sign = generateSign(params);
 
-    const response = await axios.get("https://openapi.aliexpress.com/gateway.do", { params });
+    const response = await axios.get(
+      "https://openapi.aliexpress.com/gateway.do?" + qs.stringify(params)
+    );
 
-    const data = response.data.result || {};
-    const rating = Number(data.avg_evaluation_rating) || 0;
-    const reviews = Number(data.evaluation_count) || 0;
-    const sold = Number(data.order_count) || 0;
+    const product = response.data.result[0] || {};
+
+    const rating = Number(product.averageStarRating) || 0;
+    const reviews = Number(product.feedbackCount) || 0;
+    const sold = Number(product.tradeCount) || 0;
 
     res.json({ product_id: productId, rating, reviews, sold });
   } catch (err) {
