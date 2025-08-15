@@ -47,7 +47,7 @@ app.get("/ae/product-meta", async (req, res) => {
       "https://openapi.aliexpress.com/gateway.do?" + qs.stringify(params)
     );
 
-    const product = response.data.result[0] || {};
+    const product = response.data.result || {}; // sin [0]
 
     const rating = Number(product.averageStarRating) || 0;
     const reviews = Number(product.feedbackCount) || 0;
